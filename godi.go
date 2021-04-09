@@ -3,7 +3,6 @@ package godi
 import (
 	"errors"
 	"reflect"
-	"runtime"
 )
 
 type Providers = []interface{}
@@ -116,9 +115,4 @@ func Inject(
 	returnValues := reflect.ValueOf(fn).Call(args)
 
 	return returnValues, nil
-}
-
-// Get fn's package path and name like github.com/ItsaMeTuni/godi.Inject
-func getFnPath(fn Fn) string {
-	return runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
 }

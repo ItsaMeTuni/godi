@@ -16,7 +16,7 @@ func (e MissingProviderError) Error() string {
 
 	return fmt.Sprintf(
 		"Could not find a provider of type %s for parameter %d of %s",
-		fnType.In(e.paramIdx).Name(),
+		fnType.In(e.paramIdx).String(),
 		e.paramIdx,
 		getFnPath(e.fn),
 	)
@@ -29,7 +29,7 @@ type NotAFuncError struct {
 func (e NotAFuncError) Error() string {
 	return fmt.Sprintf(
 		"You provided something other than a func to godi.Inject. Provided type: %s.",
-		e.t.Name(),
+		e.t.String(),
 	)
 }
 
