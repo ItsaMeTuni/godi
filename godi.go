@@ -7,12 +7,15 @@ import (
 	"runtime"
 )
 
-func getFnPath(fn interface{}) string {
+type Providers = []interface{}
+type Fn = interface{}
+
+func getFnPath(fn Fn) string {
 	return runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
 }
 
 type MissingProviderError struct {
-	fn interface{}
+	fn Fn
 	paramIdx int
 }
 
@@ -40,7 +43,7 @@ func (e NotAFuncError) Error() string {
 }
 
 type InvalidSignatureError struct {
-	fn interface{}
+	fn Fn
 	expectedRetVals []reflect.Type
 }
 
@@ -72,7 +75,7 @@ func (e InvalidSignatureError) Error() string {
 // func foo() (int, error) { return 0, nil }
 //
 // assertFn(foo, []interface{} { 0, errors.New("") })
-func AssertFn(fn interface{}, returnValues []interface{}) error {
+func AssertFn(fn Fn, returnValues []interface{}) error {
 	fnType := reflect.TypeOf(fn)
 	if fnType.Kind() != reflect.Func {
 		// TODO: use custom error type
@@ -116,10 +119,10 @@ func AssertFn(fn interface{}, returnValues []interface{}) error {
 // have to pass a pointer to the interface as provider. Example:
 // Assume myProvider implements MyIface
 // If we want the handler to receive a MyIface parameter,
-// providers has to be []interface{}{ &MyIface(myProvider) }.
+// providers has to be Providers{ &MyIface(myProvider) }.
 func Inject(
-	fn interface{},
-	providers []interface{},
+	fn Fn,
+	providers Providers,
 ) ([]reflect.Value, error) {
 
 	fnType := reflect.TypeOf(fn)
