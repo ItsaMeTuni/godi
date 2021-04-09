@@ -34,10 +34,10 @@ func main() {
 	
 	// Inject foo with the providers of providers and
 	// execute it. 
-	//This is equivalent to calling foo like foo(myProvider)	
+	// This is equivalent to calling foo like foo(myProvider)	
 	retVals, err := godi.Inject(foo, providers)
-    if err != nil { 
-    	return
+	if err != nil {
+		return
     }
 	
     // Print the string foo returned
