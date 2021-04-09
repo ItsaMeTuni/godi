@@ -56,3 +56,33 @@ func TestInjectInterface(t *testing.T) {
 	}
 }
 
+
+func TestInjectDeepPtr(t *testing.T) {
+	ran := false
+
+	fn := func(p ****Provider) {
+		_ = ****p // panic if p is nil or holds a nil
+		ran = true
+	}
+
+	a := Provider{}
+	b := &a
+	c := &b
+	d := &c
+
+	providers := []interface{}{ &d }
+
+	retVals, err := godi.Inject(fn, providers)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(retVals) != 0 {
+		t.Fatal(retVals)
+	}
+
+	if !ran {
+		t.Fatal("fn didnt run")
+	}
+}
+
