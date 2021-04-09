@@ -2,67 +2,12 @@ package godi
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"runtime"
 )
 
 type Providers = []interface{}
 type Fn = interface{}
-
-func getFnPath(fn Fn) string {
-	return runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
-}
-
-type MissingProviderError struct {
-	fn Fn
-	paramIdx int
-}
-
-func (e MissingProviderError) Error() string {
-
-	fnType := reflect.TypeOf(e.fn)
-
-	return fmt.Sprintf(
-		"Could not find a provider of type %s for parameter %d of %s",
-		fnType.In(e.paramIdx).Name(),
-		e.paramIdx,
-		getFnPath(e.fn),
-	)
-}
-
-type NotAFuncError struct {
-	t reflect.Type
-}
-
-func (e NotAFuncError) Error() string {
-	return fmt.Sprintf(
-		"You provided something other than a func to godi.Inject. Provided type: %s.",
-		e.t.Name(),
-	)
-}
-
-type InvalidSignatureError struct {
-	fn Fn
-	expectedRetVals []reflect.Type
-}
-
-func (e InvalidSignatureError) Error() string {
-
-	fnType := reflect.TypeOf(e.fn)
-
-	fnRetVals := make([]reflect.Type, fnType.NumOut())
-	for i := 0; i < len(fnRetVals); i++ {
-		fnRetVals[i] = fnType.Out(i)
-	}
-
-	return fmt.Sprintf(
-		"Wrong signature. Func %s has signature %s, expected %s.",
-		getFnPath(e.fn),
-		fnRetVals,
-		e.expectedRetVals,
-	)
-}
 
 // Assert whether fn is a func and whether its return value types match
 // the types of the values in returnValues (order matters).
@@ -78,21 +23,30 @@ func (e InvalidSignatureError) Error() string {
 func AssertFn(fn Fn, returnValues []interface{}) error {
 	fnType := reflect.TypeOf(fn)
 	if fnType.Kind() != reflect.Func {
-		// TODO: use custom error type
-		return errors.New("fn is not a func")
+
+		return NotAFuncError{ t: fnType }
 	}
 
 	if returnValues != nil {
+
+		expectedRetValTypes := make([]reflect.Type, len(returnValues))
+		for i, retVal := range returnValues {
+			expectedRetValTypes[i] = reflect.TypeOf(retVal)
+		}
+
 		if len(returnValues) != fnType.NumOut() {
-			// TODO: use custom error type
-			return errors.New("invalid return values")
+			return InvalidSignatureError{
+				fn: fn,
+				expectedRetVals: expectedRetValTypes,
+			}
 		}
 
 		for i := 0; i < fnType.NumOut(); i++ {
-			retValType := reflect.TypeOf(returnValues[i])
-			if !fnType.Out(i).AssignableTo(retValType) {
-				// TODO: use custom error type
-				return errors.New("invalid return values")
+			if !fnType.Out(i).AssignableTo(expectedRetValTypes[i]) {
+				return InvalidSignatureError{
+					fn: fn,
+					expectedRetVals: expectedRetValTypes,
+				}
 			}
 		}
 	}
@@ -162,4 +116,9 @@ func Inject(
 	returnValues := reflect.ValueOf(fn).Call(args)
 
 	return returnValues, nil
+}
+
+// Get fn's package path and name like github.com/ItsaMeTuni/godi.Inject
+func getFnPath(fn Fn) string {
+	return runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
 }
