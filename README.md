@@ -75,9 +75,9 @@ func foo(userId string) {
 ```
 
 This is great and all for small and simple projects. But what happens when your project grows and you need to
-write tests for `foo`? But what happens if you need a different connection somewhere else? Yes, you could mock
+write tests for `foo`? And what happens if you need a different connection somewhere else? Yes, you could mock
 the `dbConn` singleton and you could use multiple singletons for different connections, but those options
-are messy and painful.
+are messy and painful to maintain.
 
 Dependency injection solves this problem by having you _declare_ `foo`'s dependency on a `DatabaseConn` in
 `foo`'s signature and automatically _injecting_ the dependency when you call `foo`.
