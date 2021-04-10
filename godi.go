@@ -22,7 +22,6 @@ type Fn = interface{}
 func AssertFn(fn Fn, returnValues []interface{}) error {
 	fnType := reflect.TypeOf(fn)
 	if fnType.Kind() != reflect.Func {
-
 		return NotAFuncError{ t: fnType }
 	}
 
@@ -41,7 +40,7 @@ func AssertFn(fn Fn, returnValues []interface{}) error {
 		}
 
 		for i := 0; i < fnType.NumOut(); i++ {
-			if !fnType.Out(i).AssignableTo(expectedRetValTypes[i]) {
+			if !expectedRetValTypes[i].AssignableTo(fnType.Out(i)) {
 				return InvalidSignatureError{
 					fn: fn,
 					expectedRetVals: expectedRetValTypes,

@@ -1,6 +1,7 @@
 package godi_test
 
 import (
+	"errors"
 	"github.com/ItsaMeTuni/godi"
 	"testing"
 )
@@ -86,3 +87,38 @@ func TestInjectDeepPtr(t *testing.T) {
 	}
 }
 
+func TestAssertFn(t *testing.T) {
+	fn := func() (int, string, error) { return 0, "", nil }
+
+	err := godi.AssertFn(fn, []interface{}{ 0, "", errors.New("") })
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAssertFnMissingOne(t *testing.T) {
+	fn := func() (int, error) { return 0, nil }
+
+	err := godi.AssertFn(fn, []interface{}{ 0, "", errors.New("") })
+	if _, ok := err.(godi.InvalidSignatureError); !ok {
+		t.Fatal("expected InvalidSignatureError error")
+	}
+}
+
+func TestAssertFnOneExtra(t *testing.T) {
+	fn := func() (int, string, uint, error) { return 0, "", 0, nil }
+
+	err := godi.AssertFn(fn, []interface{}{ 0, "", errors.New("") })
+	if _, ok := err.(godi.InvalidSignatureError); !ok {
+		t.Fatal("expected InvalidSignatureError error")
+	}
+}
+
+func TestAssertNotFn(t *testing.T) {
+	fn := ""
+
+	err := godi.AssertFn(fn, []interface{}{ 0, "", errors.New("") })
+	if _, ok := err.(godi.NotAFuncError); !ok {
+		t.Fatal("expected NotAFuncError error")
+	}
+}
